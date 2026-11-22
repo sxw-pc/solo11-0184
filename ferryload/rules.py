@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
+from . import tide
 
 def _latest(events,kind,key):
     out={}
@@ -28,7 +29,7 @@ def calculate(events):
         vehicle_rows=[x for x in reservations.values() if x['voyage_id']==voyage_id]
         confirmed_rows=[x for x in vehicle_rows if x.get('status','confirmed')=='confirmed']
         plans=[x for x in stows.values() if x['voyage_id']==voyage_id]
-        tide_ok,tide_conflict=_tide(v)
+        tide_ok,tide_conflict=tide.evaluate(v)
         capacity=sum(l['weight_kg'] for l in v.get('lanes',{}).values())
         weight=sum(x.get('measured_kg',x.get('declared_kg',0)) for x in confirmed_rows if x.get('weigh_calibrated',False))
         boarded_weight=sum(reservations[p['vin']].get('measured_kg',0) for p in plans if p.get('boarded') and p['vin'] in reservations)
@@ -104,3 +105,4 @@ RECORD_SPECS={'voyage': ('航次与运力账', 'voyage_id', [('航次版本', ['
 def business_records(event):
     subsystem,key,specs=RECORD_SPECS[event['kind']]
     return [(subsystem,name,str(event[key]),{field:event.get(field) for field in fields}) for name,fields in specs]
+
