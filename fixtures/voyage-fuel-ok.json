@@ -1,0 +1,49 @@
+[
+  {
+    "id": "V-FUEL-1",
+    "kind": "voyage",
+    "voyage_id": "F-FUEL-1",
+    "departure_at": "2026-06-01T10:00:00Z",
+    "required_level_cm": 180,
+    "tide_windows": [
+      {
+        "start": "2026-06-01T08:00:00Z",
+        "end": "2026-06-01T12:00:00Z",
+        "level_cm": 220
+      }
+    ],
+    "cancelled": false,
+    "captain_signed": true,
+    "lanes": {
+      "L1": {
+        "weight_kg": 2000,
+        "length_cm": 600,
+        "height_cm": 300,
+        "lever_arm_cm": -100
+      },
+      "L2": {
+        "weight_kg": 2000,
+        "length_cm": 600,
+        "height_cm": 300,
+        "lever_arm_cm": 100
+      }
+    },
+    "adjacent_lanes": {
+      "L1": [
+        "L2"
+      ],
+      "L2": [
+        "L1"
+      ]
+    },
+    "version": 1,
+    "stability_min_cm": -30,
+    "stability_max_cm": 30,
+    "fuel_meter": {
+      "start_liters": 900,
+      "end_liters": 1000,
+      "density_kg_per_liter": 0.84,
+      "co2_kg_per_fuel_kg": 3.16
+    }
+  }
+]

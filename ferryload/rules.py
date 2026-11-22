@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from . import tide, vehicle, stow, refund
+from . import tide, vehicle, stow, refund, emissions
 
 def _latest(events,kind,key):
     out={}
@@ -44,6 +44,9 @@ def calculate(events):
             '稳性裁定':_decision('平衡' if stability_ok else '失衡或无实载',f'实载总重 {boarded_weight} 千克，横向重心 {center:.1f} 厘米',v['id'],*(p['id'] for p in plans)),
             '潮窗冲突冻结':_decision('冻结' if tide_conflict else '正常','冲突潮窗不得继续开放',v['id']),
             '停航退票责任':_decision('应退票' if refund.due(active,vehicle_rows,stows) else '无退票','只对停航且未实际登船的预约生成责任',v['id'])})
+        co2=emissions.co2_kg(v)
+        if co2 is not None:
+            decisions['航次碳排归集']=_decision(f'{co2:.2f}千克','航次燃油表差额乘以燃油密度和排放系数',v['id'])
         states.append(('航次与运力账',voyage_id,'开放' if tide_ok and active else '停航',v.get('version',1)))
         for x in vehicle_rows:
             vin=x['vin']; matched=vehicle.matched(x)
