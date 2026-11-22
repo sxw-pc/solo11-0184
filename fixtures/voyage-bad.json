@@ -1,0 +1,44 @@
+[
+  {
+    "id": "V2",
+    "kind": "voyage",
+    "voyage_id": "F1",
+    "departure_at": "2026-06-01T10:00:00Z",
+    "required_level_cm": 180,
+    "tide_windows": [
+      {
+        "start": "2026-06-01T08:00:00Z",
+        "end": "2026-06-01T12:00:00Z",
+        "level_cm": 220
+      },
+      {
+        "start": "2026-06-01T09:00:00Z",
+        "end": "2026-06-01T11:00:00Z",
+        "level_cm": 160
+      }
+    ],
+    "cancelled": true,
+    "captain_signed": false,
+    "lanes": {
+      "L1": {
+        "weight_kg": 1000,
+        "length_cm": 600,
+        "height_cm": 300
+      },
+      "L2": {
+        "weight_kg": 2000,
+        "length_cm": 600,
+        "height_cm": 300
+      }
+    },
+    "adjacent_lanes": {
+      "L1": [
+        "L2"
+      ],
+      "L2": [
+        "L1"
+      ]
+    },
+    "version": 2
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "C2",
+    "kind": "vehicle",
+    "voyage_id": "F1",
+    "vin": "VIN1",
+    "scan_vin": "WRONG",
+    "declared_kg": 1000,
+    "measured_kg": 3000,
+    "length_cm": 450,
+    "height_cm": 190,
+    "weigh_calibrated": false,
+    "calibration_start": "2026-05-01T00:00:00Z",
+    "calibration_end": "2026-05-31T00:00:00Z",
+    "weighed_at": "2026-06-01T09:00:00Z",
+    "hazmat_declared": true,
+    "hazmat_class": "fuel",
+    "version": 2
+  }
+]

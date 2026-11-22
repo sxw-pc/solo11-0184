@@ -1,0 +1,22 @@
+[
+  {
+    "id": "S1",
+    "kind": "stow",
+    "voyage_id": "F1",
+    "vin": "VIN1",
+    "lane": "L1",
+    "boarded": true,
+    "unloaded": true,
+    "version": 1
+  },
+  {
+    "id": "S3",
+    "kind": "stow",
+    "voyage_id": "F1",
+    "vin": "VIN2",
+    "lane": "L2",
+    "boarded": true,
+    "unloaded": true,
+    "version": 1
+  }
+]
