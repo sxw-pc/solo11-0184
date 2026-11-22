@@ -31,11 +31,16 @@ def calculate(events):
         tide_ok,tide_conflict=_tide(v)
         capacity=sum(l['weight_kg'] for l in v.get('lanes',{}).values())
         weight=sum(x.get('measured_kg',x.get('declared_kg',0)) for x in confirmed_rows if x.get('weigh_calibrated',False))
+        boarded_weight=sum(reservations[p['vin']].get('measured_kg',0) for p in plans if p.get('boarded') and p['vin'] in reservations)
+        moment=sum(reservations[p['vin']].get('measured_kg',0)*v['lanes'][p['lane']].get('lever_arm_cm',0) for p in plans if p.get('boarded') and p['vin'] in reservations and p['lane'] in v['lanes'])
+        center=moment/boarded_weight if boarded_weight else 0
+        stability_ok=boarded_weight>0 and v.get('stability_min_cm',-30)<=center<=v.get('stability_max_cm',30)
         lane_over=any(p['lane'] not in v.get('lanes',{}) or reservations[p['vin']].get('measured_kg',0)>v['lanes'][p['lane']]['weight_kg'] for p in plans if p['vin'] in reservations)
         active=not v.get('cancelled',False)
         decisions.update({
             '航次潮窗核定':_decision('开放' if tide_ok and active else '停航','潮窗有效、无冲突且未撤销' if tide_ok and active else '潮窗冲突/失效或航次停航',v['id']),
             '舱道分区额度':_decision('有余量' if weight<=capacity and not lane_over else '分区超载','有效实测总重与各舱道额定重量比较',v['id'],*(x['id'] for x in vehicle_rows)),
+            '稳性裁定':_decision('平衡' if stability_ok else '失衡或无实载',f'实载总重 {boarded_weight} 千克，横向重心 {center:.1f} 厘米',v['id'],*(p['id'] for p in plans)),
             '潮窗冲突冻结':_decision('冻结' if tide_conflict else '正常','冲突潮窗不得继续开放',v['id']),
             '停航退票责任':_decision('应退票' if not active and any(not stows.get(x['vin'],{}).get('boarded') for x in vehicle_rows) else '无退票','只对停航且未实际登船的预约生成责任',v['id'])})
         states.append(('航次与运力账',voyage_id,'开放' if tide_ok and active else '停航',v.get('version',1)))
@@ -54,16 +59,31 @@ def calculate(events):
         occupancy=defaultdict(list)
         for p in plans: occupancy[p['lane']].append(p)
         valid_plan=all(len(xs)==1 and xs[0]['vin'] in reservations and xs[0]['lane'] in v.get('lanes',{}) and reservations[xs[0]['vin']].get('measured_kg',0)<=v['lanes'][xs[0]['lane']]['weight_kg'] and reservations[xs[0]['vin']].get('length_cm',0)<=v['lanes'][xs[0]['lane']]['length_cm'] and reservations[xs[0]['vin']].get('height_cm',0)<=v['lanes'][xs[0]['lane']]['height_cm'] for xs in occupancy.values()) and bool(plans) and len(plans)==len(confirmed_rows)
+        hazard_conflict=any(x.get('hazmat_class') and any(other['vin']!=x['vin'] and other.get('hazmat_class') and stows.get(other['vin'],{}).get('lane') in v.get('adjacent_lanes',{}).get(stows.get(x['vin'],{}).get('lane'),[]) for other in confirmed_rows) for x in confirmed_rows)
+        confirmed_ready=all(x.get('scan_vin')==x['vin'] and x.get('weigh_calibrated') and _instant(x['calibration_start'])<=_instant(x['weighed_at'])<_instant(x['calibration_end']) and x.get('hazmat_declared',True) for x in confirmed_rows)
+        plan_eligible=valid_plan and tide_ok and active and not lane_over and not hazard_conflict and confirmed_ready
         boarded=all(p.get('boarded') for p in plans)
         scanned=all(p.get('boarded') and p.get('unloaded') for p in plans)
-        waitlist=[x for x in vehicle_rows if x['vin'] not in stows and x.get('scan_vin')==x['vin'] and x.get('weigh_calibrated')]
+        waitlist=sorted((x for x in vehicle_rows if x['vin'] not in stows and x.get('scan_vin')==x['vin'] and x.get('weigh_calibrated') and _instant(x['calibration_start'])<=_instant(x['weighed_at'])<_instant(x['calibration_end']) and x.get('hazmat_declared',True)),
+                        key=lambda x:(-x.get('priority',0),x['id']))
+        occupied_lanes={p['lane'] for p in plans if p.get('boarded')}
+        free_lanes=set(v.get('lanes',{}))-occupied_lanes
+        def candidate_fits(x,lane_id):
+            lane=v['lanes'][lane_id]
+            size_ok=x.get('measured_kg',0)<=lane['weight_kg'] and x.get('length_cm',0)<=lane['length_cm'] and x.get('height_cm',0)<=lane['height_cm']
+            neighbors=v.get('adjacent_lanes',{}).get(lane_id,[])
+            hazard_ok=not x.get('hazmat_class') or not any(reservations[p['vin']].get('hazmat_class') and p['lane'] in neighbors for p in plans if p.get('boarded') and p['vin'] in reservations)
+            return size_ok and hazard_ok
+        eligible_candidate=next((x for x in waitlist if any(candidate_fits(x,lane) for lane in free_lanes)),None)
         vehicles_ok=bool(confirmed_rows) and all(x.get('scan_vin')==x['vin'] and x.get('weigh_calibrated') and _instant(x['calibration_start'])<=_instant(x['weighed_at'])<_instant(x['calibration_end']) and x.get('hazmat_declared',True) and not (x.get('hazmat_class') and any(other['vin']!=x['vin'] and other.get('hazmat_class') and stows.get(other['vin'],{}).get('lane') in v.get('adjacent_lanes',{}).get(stows.get(x['vin'],{}).get('lane'),[]) for other in confirmed_rows)) for x in confirmed_rows)
-        departures=active and tide_ok and weight<=capacity and vehicles_ok and valid_plan and boarded and v.get('captain_signed',False)
-        decisions['舱位配载确认']=_decision('确认' if valid_plan else '待改配','一个舱位同一航次只对应一辆合格车',v['id'],*(p['id'] for p in plans))
+        departures=active and tide_ok and weight<=capacity and stability_ok and vehicles_ok and valid_plan and boarded and v.get('captain_signed',False)
+        decisions['舱位配载确认']=_decision('确认' if plan_eligible else '待改配','舱位唯一且航次潮窗、额度和状态仍有效',v['id'],*(p['id'] for p in plans))
         decisions['登船与离船闭环']=_decision('闭环' if scanned else '缺口','每辆已配载车应有登船及到港离船扫描',*(p['id'] for p in plans),v['id'])
         decisions['离港放行裁定']=_decision('放行' if departures else '阻断','潮窗、重量、配载、扫描和船长签认共同决定',v['id'],*(p['id'] for p in plans))
-        decisions['候补递补资格']=_decision(('可递补' if len(plans)<len(v.get('lanes',{})) else '候补待空位') if waitlist else '无候补','合格而未占舱位的预约按真实空位递补',v['id'],*(x['id'] for x in waitlist))
-        for p in plans: states.append(('配载与航行账',p['vin'],'完成' if p.get('boarded') and p.get('unloaded') else '待闭环',p.get('version',1)))
+        wait_result=('可递补:'+eligible_candidate['vin']) if eligible_candidate else (('候补待空位:'+waitlist[0]['vin']) if waitlist and not free_lanes else ('无合格候补' if waitlist else '无候补'))
+        decisions['候补递补资格']=_decision(wait_result,'合格而未占舱位的预约按优先级、舱道尺寸和危险品隔离递补',v['id'],*(x['id'] for x in waitlist))
+        decisions['实载额度释放']=_decision(f'{len(free_lanes)}条空舱道','只将已经登船的车辆计入实载占用；缺扫描的原计划释放可用额度',v['id'],*(p['id'] for p in plans))
+        for p in plans: states.append(('配载与航行账',p['vin'],('完成' if p.get('boarded') and p.get('unloaded') else '待闭环') if plan_eligible else '待改配',p.get('version',1)))
     for vin,x in reservations.items():
         if x['voyage_id'] in voyages: continue
         matched=x.get('scan_vin')==vin

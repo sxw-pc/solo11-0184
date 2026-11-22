@@ -18,12 +18,14 @@
       "L1": {
         "weight_kg": 2000,
         "length_cm": 600,
-        "height_cm": 300
+        "height_cm": 300,
+        "lever_arm_cm": -100
       },
       "L2": {
         "weight_kg": 2000,
         "length_cm": 600,
-        "height_cm": 300
+        "height_cm": 300,
+        "lever_arm_cm": 100
       }
     },
     "adjacent_lanes": {
@@ -34,6 +36,8 @@
         "L1"
       ]
     },
-    "version": 3
+    "version": 3,
+    "stability_min_cm": -30,
+    "stability_max_cm": 30
   }
 ]

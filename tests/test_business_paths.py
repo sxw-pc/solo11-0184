@@ -19,11 +19,24 @@ class PathTests(unittest.TestCase):
     def test_adjacent_hazardous_classes_block_departure(self):
         self.add('vehicle','vehicle-hazmat.json')
         self.assertEqual(self.result('危险品隔离核验:VIN1'),'拒载')
+        self.assertEqual(self.result('舱位配载确认'),'待改配')
         self.assertEqual(self.result('离港放行裁定'),'阻断')
     def test_valid_waitlist_does_not_change_confirmed_manifest(self):
         self.add('vehicle','vehicle-waitlist.json')
-        self.assertEqual(self.result('候补递补资格'),'候补待空位')
+        self.assertEqual(self.result('候补递补资格'),'候补待空位:VIN3')
         self.assertEqual(self.result('离港放行裁定'),'放行')
+    def test_priority_and_no_show_release_a_lane(self):
+        self.add('vehicle','vehicle-waitlist.json')
+        self.add('vehicle','vehicle-waitlist-two.json')
+        self.assertEqual(self.result('候补递补资格'),'候补待空位:VIN4')
+        self.add('stow','stow-bad.json')
+        self.assertEqual(self.result('候补递补资格'),'可递补:VIN4')
+        self.assertEqual(self.result('实载额度释放'),'1条空舱道')
+    def test_balanced_total_weight_can_still_fail_stability(self):
+        self.add('vehicle','vehicle-unstable.json')
+        self.assertEqual(self.result('舱道分区额度'),'有余量')
+        self.assertEqual(self.result('稳性裁定'),'失衡或无实载')
+        self.assertEqual(self.result('离港放行裁定'),'阻断')
     def test_cancel_after_unboarded_scan_creates_refund(self):
         self.add('stow','stow-bad.json')
         self.add('voyage','voyage-cancel.json')
