@@ -49,3 +49,15 @@ class PathTests(unittest.TestCase):
         self.add('stow','stow-conflict.json')
         self.assertEqual(self.result('舱位配载确认'),'待改配')
         self.assertEqual(self.result('离港放行裁定'),'阻断')
+    def test_missing_boarding_blocks_departure(self):
+        self.add('stow','stow-bad.json')
+        self.assertEqual(self.result('登船与离船闭环'),'缺口')
+        self.assertEqual(self.result('离港放行裁定'),'阻断')
+    def test_each_business_entry_runs_without_other_sources(self):
+        for kind,name in [('voyage','voyage-ok.json'),('vehicle','vehicle-ok.json'),('stow','stow-ok.json')]:
+            with self.subTest(kind=kind):
+                solo=connect(':memory:')
+                import_file(solo,kind,FIXTURES/name)
+                self.assertTrue(report(solo)['decisions'])
+                self.assertTrue(report(solo)['entities'])
+                solo.close()

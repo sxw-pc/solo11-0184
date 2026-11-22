@@ -64,6 +64,19 @@ def calculate(events):
         decisions['离港放行裁定']=_decision('放行' if departures else '阻断','潮窗、重量、配载、扫描和船长签认共同决定',v['id'],*(p['id'] for p in plans))
         decisions['候补递补资格']=_decision(('可递补' if len(plans)<len(v.get('lanes',{})) else '候补待空位') if waitlist else '无候补','合格而未占舱位的预约按真实空位递补',v['id'],*(x['id'] for x in waitlist))
         for p in plans: states.append(('配载与航行账',p['vin'],'完成' if p.get('boarded') and p.get('unloaded') else '待闭环',p.get('version',1)))
+    for vin,x in reservations.items():
+        if x['voyage_id'] in voyages: continue
+        matched=x.get('scan_vin')==vin
+        measured=x.get('measured_kg') is not None and x.get('weigh_calibrated') and _instant(x['calibration_start'])<=_instant(x['weighed_at'])<_instant(x['calibration_end'])
+        decisions[f'车辆身份复核:{vin}']=_decision('通过' if matched else '拒载','预约 VIN 与闸口扫描独立核验；航次证据尚未导入',x['id'])
+        decisions[f'实测重量裁定:{vin}']=_decision('有效' if measured else '待复称','独立校准凭据覆盖称重时刻',x['id'])
+        decisions[f'危险品隔离核验:{vin}']=_decision('待配载' if x.get('hazmat_class') else '合格','危险品邻接要在实际配载后才能核定',x['id'])
+        decisions[f'称重校准可信度:{vin}']=_decision('可信' if measured else '失效','称重凭据单独留存',x['id'])
+        states.append(('车辆申报与验车账',vin,'合格' if matched and measured else '待核',x.get('version',1)))
+    for vin,p in stows.items():
+        if p['voyage_id'] in voyages: continue
+        decisions[f'登船与离船闭环:{vin}']=_decision('闭环' if p.get('boarded') and p.get('unloaded') else '缺口','登离船扫描可独立登记，最终放行待航次证据',p['id'])
+        states.append(('配载与航行账',vin,'待航次核定',p.get('version',1)))
     return decisions,states
 
 RECORD_SPECS={'voyage': ('航次与运力账', 'voyage_id', [('航次版本', ['tide_valid', 'tide_conflict', 'cancelled', 'captain_signed']), ('舱道额度', ['lanes'])]), 'vehicle': ('车辆申报与验车账', 'vin', [('预约单', ['voyage_id', 'vin', 'declared_kg']), ('验车记录', ['scan_vin', 'measured_kg', 'weigh_calibrated', 'hazmat_declared'])]), 'stow': ('配载与航行账', 'vin', [('配载方案', ['voyage_id', 'lane']), ('登离船扫描', ['boarded', 'unloaded'])])}
