@@ -1,0 +1,7 @@
+{
+  "cargo_id": "CARGO-1",
+  "voyage_id": "F1",
+  "vin": "VIN1",
+  "origin_seal": "S001",
+  "arrival_seal": "S001"
+}
