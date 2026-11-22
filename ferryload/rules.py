@@ -31,10 +31,11 @@ def calculate(events):
         tide_ok,tide_conflict=_tide(v)
         capacity=sum(l['weight_kg'] for l in v.get('lanes',{}).values())
         weight=sum(x.get('measured_kg',x.get('declared_kg',0)) for x in confirmed_rows if x.get('weigh_calibrated',False))
+        lane_over=any(p['lane'] not in v.get('lanes',{}) or reservations[p['vin']].get('measured_kg',0)>v['lanes'][p['lane']]['weight_kg'] for p in plans if p['vin'] in reservations)
         active=not v.get('cancelled',False)
         decisions.update({
             '航次潮窗核定':_decision('开放' if tide_ok and active else '停航','潮窗有效、无冲突且未撤销' if tide_ok and active else '潮窗冲突/失效或航次停航',v['id']),
-            '舱道分区额度':_decision('有余量' if weight<=capacity else '超载','有效实测总重与各舱道额定重量比较',v['id'],*(x['id'] for x in vehicle_rows)),
+            '舱道分区额度':_decision('有余量' if weight<=capacity and not lane_over else '分区超载','有效实测总重与各舱道额定重量比较',v['id'],*(x['id'] for x in vehicle_rows)),
             '潮窗冲突冻结':_decision('冻结' if tide_conflict else '正常','冲突潮窗不得继续开放',v['id']),
             '停航退票责任':_decision('应退票' if not active and any(not stows.get(x['vin'],{}).get('boarded') for x in vehicle_rows) else '无退票','只对停航且未实际登船的预约生成责任',v['id'])})
         states.append(('航次与运力账',voyage_id,'开放' if tide_ok and active else '停航',v.get('version',1)))

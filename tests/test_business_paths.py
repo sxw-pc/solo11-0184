@@ -33,3 +33,19 @@ class PathTests(unittest.TestCase):
         self.add('voyage','voyage-bad.json')
         self.assertEqual(self.result('潮窗冲突冻结'),'冻结')
         self.assertEqual(self.result('航次潮窗核定'),'停航')
+    def test_lane_specific_weight_rejects_even_when_total_capacity_remains(self):
+        self.add('vehicle','vehicle-heavy.json')
+        self.assertEqual(self.result('舱道分区额度'),'分区超载')
+        self.assertEqual(self.result('舱位配载确认'),'待改配')
+    def test_vin_mismatch_rejects_vehicle(self):
+        self.add('vehicle','vehicle-scan-mismatch.json')
+        self.assertEqual(self.result('车辆身份复核:VIN1'),'拒载')
+        self.assertEqual(self.result('离港放行裁定'),'阻断')
+    def test_expired_calibration_invalidates_measured_weight(self):
+        self.add('vehicle','vehicle-calibration-expired.json')
+        self.assertEqual(self.result('实测重量裁定:VIN1'),'待复称')
+        self.assertEqual(self.result('离港放行裁定'),'阻断')
+    def test_duplicate_lane_blocks_stow_plan(self):
+        self.add('stow','stow-conflict.json')
+        self.assertEqual(self.result('舱位配载确认'),'待改配')
+        self.assertEqual(self.result('离港放行裁定'),'阻断')
