@@ -1,0 +1,10 @@
+{
+  "cargo_id": "COLD-1",
+  "voyage_id": "F1",
+  "vin": "VIN1",
+  "allowed_max_c": 5,
+  "samples": [
+    {"at": "2026-06-01T10:00:00Z", "temperature_c": 3},
+    {"at": "2026-06-01T10:30:00Z", "temperature_c": 4}
+  ]
+}

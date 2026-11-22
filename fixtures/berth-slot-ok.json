@@ -1,0 +1,4 @@
+{
+  "request": {"slot_id": "F1-A", "berth_id": "B1", "start": "2026-06-01T09:00:00Z", "end": "2026-06-01T10:00:00Z"},
+  "reservations": [{"slot_id": "F0-A", "berth_id": "B1", "start": "2026-06-01T08:00:00Z", "end": "2026-06-01T09:00:00Z"}]
+}
