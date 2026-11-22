@@ -1,0 +1,20 @@
+[
+  {
+    "id": "C9",
+    "kind": "vehicle",
+    "voyage_id": "F1",
+    "vin": "VIN1",
+    "scan_vin": "VIN1",
+    "declared_kg": 1000,
+    "measured_kg": 1900,
+    "length_cm": 450,
+    "height_cm": 190,
+    "weigh_calibrated": true,
+    "calibration_start": "2026-05-01T00:00:00Z",
+    "calibration_end": "2026-07-01T00:00:00Z",
+    "weighed_at": "2026-06-01T09:00:00Z",
+    "hazmat_declared": true,
+    "hazmat_class": null,
+    "version": 2
+  }
+]

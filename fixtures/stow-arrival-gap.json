@@ -1,0 +1,12 @@
+[
+  {
+    "id": "S4",
+    "kind": "stow",
+    "voyage_id": "F1",
+    "vin": "VIN1",
+    "lane": "L1",
+    "boarded": true,
+    "unloaded": false,
+    "version": 2
+  }
+]
