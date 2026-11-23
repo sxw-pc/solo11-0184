@@ -1,0 +1,181 @@
+{
+  "voyage": [
+    {
+      "id": "V10",
+      "kind": "voyage",
+      "voyage_id": "F2",
+      "departure_at": "2026-06-02T10:00:00Z",
+      "required_level_cm": 180,
+      "tide_windows": [
+        {
+          "start": "2026-06-02T08:00:00Z",
+          "end": "2026-06-02T12:00:00Z",
+          "level_cm": 220
+        }
+      ],
+      "cancelled": false,
+      "captain_signed": true,
+      "transport_mode": "sea",
+      "forecast_temp_c": 25,
+      "lanes": {
+        "L1": { "weight_kg": 2000, "length_cm": 600, "height_cm": 300, "lever_arm_cm": -150 },
+        "L2": { "weight_kg": 2000, "length_cm": 600, "height_cm": 300, "lever_arm_cm": -50 },
+        "L3": { "weight_kg": 2000, "length_cm": 600, "height_cm": 300, "lever_arm_cm": 50 },
+        "L4": { "weight_kg": 2000, "length_cm": 600, "height_cm": 300, "lever_arm_cm": 150 }
+      },
+      "adjacent_lanes": {
+        "L1": [],
+        "L2": [],
+        "L3": [],
+        "L4": []
+      },
+      "ventilation_zones": {
+        "VENT-A": ["L1", "L2", "L3"],
+        "VENT-B": ["L4"]
+      },
+      "signed_manifest": [["VINA", "L1"], ["VINB", "L2"], ["VINC", "L3"]],
+      "stability_min_cm": -100,
+      "stability_max_cm": 100,
+      "version": 1
+    }
+  ],
+  "vehicle": [
+    {
+      "id": "CA1",
+      "kind": "vehicle",
+      "voyage_id": "F2",
+      "vin": "VINA",
+      "scan_vin": "VINA",
+      "declared_kg": 1000,
+      "measured_kg": 1100,
+      "length_cm": 450,
+      "height_cm": 190,
+      "weigh_calibrated": true,
+      "calibration_start": "2026-05-01T00:00:00Z",
+      "calibration_end": "2026-07-01T00:00:00Z",
+      "weighed_at": "2026-06-01T09:00:00Z",
+      "hazmat_declared": true,
+      "hazmat_class": "oxidizer",
+      "cargo": { "chemical_code": "UN2014", "name": "hydrogen peroxide", "concentration": "50%", "batch": "BATCH-A" },
+      "status": "confirmed",
+      "version": 1
+    },
+    {
+      "id": "CB1",
+      "kind": "vehicle",
+      "voyage_id": "F2",
+      "vin": "VINB",
+      "scan_vin": "VINB",
+      "declared_kg": 950,
+      "measured_kg": 1000,
+      "length_cm": 430,
+      "height_cm": 185,
+      "weigh_calibrated": true,
+      "calibration_start": "2026-05-01T00:00:00Z",
+      "calibration_end": "2026-07-01T00:00:00Z",
+      "weighed_at": "2026-06-01T09:05:00Z",
+      "hazmat_declared": true,
+      "hazmat_class": "oxidizer",
+      "cargo": { "chemical_code": "UN1791", "name": "sodium hypochlorite", "concentration": "12%", "batch": "BATCH-B" },
+      "status": "confirmed",
+      "version": 1
+    },
+    {
+      "id": "CC1",
+      "kind": "vehicle",
+      "voyage_id": "F2",
+      "vin": "VINC",
+      "scan_vin": "VINC",
+      "declared_kg": 850,
+      "measured_kg": 900,
+      "length_cm": 420,
+      "height_cm": 180,
+      "weigh_calibrated": true,
+      "calibration_start": "2026-05-01T00:00:00Z",
+      "calibration_end": "2026-07-01T00:00:00Z",
+      "weighed_at": "2026-06-01T09:10:00Z",
+      "hazmat_declared": true,
+      "hazmat_class": "corrosive",
+      "cargo": { "chemical_code": "UN1789", "name": "hydrochloric acid", "concentration": "31%", "batch": "BATCH-C" },
+      "status": "confirmed",
+      "version": 1
+    },
+    {
+      "id": "CD1",
+      "kind": "vehicle",
+      "voyage_id": "F2",
+      "vin": "VIND",
+      "scan_vin": "VIND",
+      "declared_kg": 900,
+      "measured_kg": 950,
+      "length_cm": 420,
+      "height_cm": 180,
+      "weigh_calibrated": true,
+      "calibration_start": "2026-05-01T00:00:00Z",
+      "calibration_end": "2026-07-01T00:00:00Z",
+      "weighed_at": "2026-06-01T09:15:00Z",
+      "hazmat_declared": true,
+      "hazmat_class": null,
+      "cargo": null,
+      "priority": 5,
+      "status": "waitlist",
+      "version": 1
+    }
+  ],
+  "stow": [
+    { "id": "SA", "kind": "stow", "voyage_id": "F2", "vin": "VINA", "lane": "L1", "boarded": true, "unloaded": false, "version": 1 },
+    { "id": "SB", "kind": "stow", "voyage_id": "F2", "vin": "VINB", "lane": "L2", "boarded": true, "unloaded": false, "version": 1 },
+    { "id": "SC", "kind": "stow", "voyage_id": "F2", "vin": "VINC", "lane": "L3", "boarded": true, "unloaded": false, "version": 1 }
+  ],
+  "sds": [
+    {
+      "id": "SDS1",
+      "kind": "sds",
+      "doc_id": "SDS-3WAY",
+      "errata_version": 2,
+      "version": 2,
+      "captured_at": "2026-05-20T08:00:00Z",
+      "transport_mode": "sea",
+      "catalog": [
+        { "chemical_code": "UN2014", "name": "hydrogen peroxide", "concentration": "50%" },
+        { "chemical_code": "UN1791", "name": "sodium hypochlorite", "concentration": "12%" },
+        { "chemical_code": "UN1789", "name": "hydrochloric acid", "concentration": "31%" }
+      ],
+      "pages": [
+        {
+          "page": 1,
+          "errata": 2,
+          "tokens": ["安全数据表", "第一部分", "化学品及企业标识"],
+          "proofread": "安全数据表 第一部分 化学品及企业标识"
+        },
+        {
+          "page": 3,
+          "errata": 2,
+          "tokens": ["不得", "将", "UN2014", "UN1791", "UN1789", "同时", "存放", "于", "同一", "通风分区"],
+          "proofread": "不得将 UN2014、UN1791、UN1789 同时存放于同一通风分区"
+        },
+        {
+          "page": 4,
+          "errata": 2,
+          "tokens": ["任意", "两种", "可", "共存"],
+          "proofread": "任意两种可共存"
+        }
+      ],
+      "restrictions": [
+        {
+          "id": "R-3WAY",
+          "scope": "ventilation_zone",
+          "cargoes": [
+            { "chemical_code": "UN2014", "name": "hydrogen peroxide", "concentration": "50%", "batch": "BATCH-A" },
+            { "chemical_code": "UN1791", "name": "sodium hypochlorite", "concentration": "12%", "batch": "BATCH-B" },
+            { "chemical_code": "UN1789", "name": "hydrochloric acid", "concentration": "31%", "batch": "BATCH-C" }
+          ],
+          "condition": { "temp_min_c": -10, "temp_max_c": 40, "transport_modes": ["sea"] },
+          "text": "不得将 UN2014(50%)、UN1791(12%)、UN1789(31%) 同时存放于同一通风分区：三者同区会生成危险气体；任意两者可共存。",
+          "source_pages": [3, 4],
+          "errata_version": 2
+        }
+      ]
+    }
+  ]
+}

@@ -22,8 +22,12 @@ def connect(path):
 
 def import_file(db, kind, file):
     raw=Path(file).read_bytes()
+    return import_payload(db,kind,json.loads(raw),raw=raw)
+
+def import_payload(db, kind, payload, raw=None):
+    if raw is None:
+        raw=json.dumps(payload,ensure_ascii=False,sort_keys=True).encode('utf-8')
     sha=hashlib.sha256(raw).hexdigest()
-    payload=json.loads(raw)
     if not isinstance(payload,list) or not payload:
         raise ValueError('source must contain a nonempty event list')
     if db.execute('SELECT 1 FROM source_files WHERE sha=?',(sha,)).fetchone():
@@ -51,6 +55,17 @@ def import_file(db, kind, file):
         db.rollback()
         raise
     return {'sha':sha,'inserted':len(payload),'idempotent':False}
+
+def import_bundle(db, bundle):
+    """导入同一场景的航次/车辆/配载/SDS 四类证据包（如 fixtures/sds-threeway.json）。"""
+    results={}
+    for kind in ('voyage','vehicle','stow','sds'):
+        payload=bundle.get(kind)
+        if payload: results[kind]=import_payload(db,kind,payload)
+    return results
+
+def import_bundle_file(db, file):
+    return import_bundle(db,json.loads(Path(file).read_bytes()))
 
 def rebuild(db):
     events=[json.loads(row[0]) for row in db.execute('SELECT body FROM events ORDER BY seq')]
