@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS decisions (name TEXT PRIMARY KEY, result TEXT NOT NUL
 CREATE TABLE IF NOT EXISTS entity_state (subsystem TEXT NOT NULL, entity_id TEXT NOT NULL, state TEXT NOT NULL, version INTEGER NOT NULL, PRIMARY KEY(subsystem,entity_id));
 CREATE TABLE IF NOT EXISTS decision_history (revision INTEGER NOT NULL, name TEXT NOT NULL, result TEXT NOT NULL, reason TEXT NOT NULL, PRIMARY KEY(revision,name));
 CREATE TABLE IF NOT EXISTS business_record (subsystem TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, source_event TEXT NOT NULL, version INTEGER NOT NULL, body TEXT NOT NULL, PRIMARY KEY(subsystem,entity_type,entity_id,version));
+CREATE TABLE IF NOT EXISTS certificates (voyage_id TEXT NOT NULL, revision INTEGER NOT NULL, body TEXT NOT NULL, PRIMARY KEY(voyage_id,revision));
 """
 
 def connect(path):
@@ -20,8 +21,7 @@ def connect(path):
     db.executescript(SCHEMA)
     return db
 
-def import_file(db, kind, file):
-    raw=Path(file).read_bytes()
+def _ingest(db, kind, raw):
     sha=hashlib.sha256(raw).hexdigest()
     payload=json.loads(raw)
     if not isinstance(payload,list) or not payload:
@@ -52,9 +52,27 @@ def import_file(db, kind, file):
         raise
     return {'sha':sha,'inserted':len(payload),'idempotent':False}
 
+def import_file(db, kind, file):
+    return _ingest(db, kind, Path(file).read_bytes())
+
+def import_bundle(db, file):
+    """Import a multi-section capture file {'voyage': [...], 'vehicle': [...], ...}.
+
+    Each section is ingested as its own provenance-tracked source so audit
+    replay and idempotency behave exactly like single-kind imports.
+    """
+    payload=json.loads(Path(file).read_bytes())
+    if not isinstance(payload,dict) or not payload:
+        raise ValueError('bundle must be a nonempty object of kind -> event list')
+    results={}
+    for kind,events in payload.items():
+        raw=json.dumps(events,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()
+        results[kind]=_ingest(db,kind,raw)
+    return results
+
 def rebuild(db):
     events=[json.loads(row[0]) for row in db.execute('SELECT body FROM events ORDER BY seq')]
-    decisions,states=rules.calculate(events)
+    decisions,states,certificates=rules.calculate(events)
     revision=db.execute('SELECT COUNT(*) FROM source_files').fetchone()[0]+1
     db.execute('DELETE FROM decisions')
     db.execute('DELETE FROM entity_state')
@@ -67,11 +85,15 @@ def rebuild(db):
     for event in events:
         for subsystem,entity_type,entity_id,body in rules.business_records(event):
             db.execute('INSERT OR REPLACE INTO business_record VALUES (?,?,?,?,?,?)',(subsystem,entity_type,entity_id,event['id'],event.get('version',1),json.dumps(body,ensure_ascii=False,sort_keys=True)))
+    for voyage_id,cert in sorted(certificates.items()):
+        db.execute('INSERT OR REPLACE INTO certificates VALUES (?,?,?)',(voyage_id,revision,json.dumps(cert,ensure_ascii=False,sort_keys=True)))
 
 def report(db):
     return {'decisions':{r['name']:{'result':r['result'],'reason':r['reason'],'evidence':json.loads(r['evidence'])} for r in db.execute('SELECT * FROM decisions ORDER BY name')},
             'entities':[dict(r) for r in db.execute('SELECT * FROM entity_state ORDER BY subsystem,entity_id')],
             'business_records':[dict(r) for r in db.execute('SELECT * FROM business_record ORDER BY subsystem,entity_type,entity_id,version')],
+            'certificates':{r['voyage_id']:json.loads(r['body']) for r in db.execute('SELECT c.voyage_id,c.body FROM certificates c JOIN (SELECT voyage_id,MAX(revision) AS latest FROM certificates GROUP BY voyage_id) m ON c.voyage_id=m.voyage_id AND c.revision=m.latest ORDER BY c.voyage_id')},
+            'certificate_history':[{'voyage_id':r['voyage_id'],'revision':r['revision'],'body':json.loads(r['body'])} for r in db.execute('SELECT voyage_id,revision,body FROM certificates ORDER BY voyage_id,revision')],
             'sources':[dict(r) for r in db.execute('SELECT sha,kind FROM source_files ORDER BY sha')]}
 
 def audit(db):

@@ -1,12 +1,12 @@
 import argparse
 import json
 from pathlib import Path
-from .store import connect,import_file,report,audit
+from .store import connect,import_file,import_bundle,report,audit
 
-IMPORTS={'voyage-import': 'voyage', 'vehicle-import': 'vehicle', 'stow-import': 'stow'}
+IMPORTS={'voyage-import': 'voyage', 'vehicle-import': 'vehicle', 'stow-import': 'stow', 'scale-import': 'scale'}
 def main(argv=None):
     parser=argparse.ArgumentParser(prog='ferryload')
-    parser.add_argument('command',choices=list(IMPORTS)+['demo','report','audit'])
+    parser.add_argument('command',choices=list(IMPORTS)+['bundle-import','demo','report','audit'])
     parser.add_argument('--db',default='state.sqlite')
     parser.add_argument('--file')
     args=parser.parse_args(argv)
@@ -14,6 +14,9 @@ def main(argv=None):
     if args.command in IMPORTS:
         if not args.file: parser.error('--file required')
         result=import_file(db,IMPORTS[args.command],args.file)
+    elif args.command=='bundle-import':
+        if not args.file: parser.error('--file required')
+        result=import_bundle(db,args.file)
     elif args.command=='demo':
         root=Path(__file__).resolve().parents[1]/'fixtures'
         result=[]

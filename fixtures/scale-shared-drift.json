@@ -1,0 +1,214 @@
+{
+  "voyage": [
+    {
+      "id": "V3",
+      "kind": "voyage",
+      "voyage_id": "F3",
+      "departure_at": "2026-07-15T10:00:00Z",
+      "required_level_cm": 180,
+      "tide_windows": [
+        {
+          "start": "2026-07-15T08:00:00Z",
+          "end": "2026-07-15T12:00:00Z",
+          "level_cm": 220
+        }
+      ],
+      "cancelled": false,
+      "captain_signed": true,
+      "lanes": {
+        "A1": {
+          "weight_kg": 2000,
+          "length_cm": 600,
+          "height_cm": 300,
+          "lever_arm_cm": -100
+        },
+        "A2": {
+          "weight_kg": 2000,
+          "length_cm": 600,
+          "height_cm": 300,
+          "lever_arm_cm": 100
+        }
+      },
+      "adjacent_lanes": {
+        "A1": [
+          "A2"
+        ],
+        "A2": [
+          "A1"
+        ]
+      },
+      "stability_min_cm": -6,
+      "stability_max_cm": 6,
+      "version": 1
+    }
+  ],
+  "vehicle": [
+    {
+      "id": "D1",
+      "kind": "vehicle",
+      "voyage_id": "F3",
+      "vin": "VIN_F1",
+      "scan_vin": "VIN_F1",
+      "declared_kg": 1050,
+      "weigh_ticket": "T-3001",
+      "length_cm": 450,
+      "height_cm": 190,
+      "hazmat_declared": true,
+      "hazmat_class": null,
+      "version": 1
+    },
+    {
+      "id": "D2",
+      "kind": "vehicle",
+      "voyage_id": "F3",
+      "vin": "VIN_F2",
+      "scan_vin": "VIN_F2",
+      "declared_kg": 980,
+      "weigh_ticket": "T-3002",
+      "length_cm": 430,
+      "height_cm": 180,
+      "hazmat_declared": true,
+      "hazmat_class": null,
+      "version": 1
+    },
+    {
+      "id": "D3",
+      "kind": "vehicle",
+      "voyage_id": "F3",
+      "vin": "VIN_F3",
+      "scan_vin": "VIN_F3",
+      "declared_kg": 900,
+      "weigh_ticket": "T-3003",
+      "length_cm": 420,
+      "height_cm": 180,
+      "hazmat_declared": true,
+      "hazmat_class": null,
+      "status": "waitlist",
+      "priority": 1,
+      "version": 1
+    }
+  ],
+  "stow": [
+    {
+      "id": "P1",
+      "kind": "stow",
+      "voyage_id": "F3",
+      "vin": "VIN_F1",
+      "lane": "A1",
+      "boarded": true,
+      "unloaded": true,
+      "version": 1
+    },
+    {
+      "id": "P2",
+      "kind": "stow",
+      "voyage_id": "F3",
+      "vin": "VIN_F2",
+      "lane": "A2",
+      "boarded": true,
+      "unloaded": true,
+      "version": 1
+    }
+  ],
+  "scale": [
+    {
+      "id": "K1",
+      "kind": "scale",
+      "role": "calibration",
+      "scale_id": "SCALE-1",
+      "calibration_id": "CAL-1-CUR",
+      "valid_from": "2026-06-01T00:00:00Z",
+      "valid_to": "2026-08-01T00:00:00Z",
+      "points": [
+        {
+          "known_kg": 0,
+          "indicated_kg": 0
+        },
+        {
+          "known_kg": 2000,
+          "indicated_kg": 2100
+        }
+      ],
+      "zero_bias_kg": [0, 100],
+      "version": 1
+    },
+    {
+      "id": "K0",
+      "kind": "scale",
+      "role": "calibration",
+      "scale_id": "SCALE-1",
+      "calibration_id": "CAL-1-PREV",
+      "valid_from": "2026-04-01T00:00:00Z",
+      "valid_to": "2026-06-01T00:00:00Z",
+      "points": [
+        {
+          "known_kg": 0,
+          "indicated_kg": 0
+        },
+        {
+          "known_kg": 2000,
+          "indicated_kg": 2050
+        }
+      ],
+      "zero_bias_kg": [0, 50],
+      "version": 1
+    },
+    {
+      "id": "E1",
+      "kind": "scale",
+      "role": "ticket",
+      "ticket_no": "T-3001",
+      "vin": "VIN_F1",
+      "voyage_id": "F3",
+      "scale_id": "SCALE-1",
+      "calibration_id": "CAL-1-CUR",
+      "reading_kg": 1100,
+      "weighed_at": "2026-07-10T09:00:00Z",
+      "revision": 1,
+      "void": false,
+      "ocr": {
+        "page": 1,
+        "box": [12, 34, 120, 18]
+      },
+      "version": 1
+    },
+    {
+      "id": "E2",
+      "kind": "scale",
+      "role": "ticket",
+      "ticket_no": "T-3002",
+      "vin": "VIN_F2",
+      "voyage_id": "F3",
+      "scale_id": "SCALE-1",
+      "calibration_id": "CAL-1-CUR",
+      "reading_kg": 1000,
+      "weighed_at": "2026-07-10T09:05:00Z",
+      "revision": 1,
+      "void": false,
+      "ocr": {
+        "page": 1,
+        "box": [12, 58, 120, 18]
+      },
+      "version": 1
+    },
+    {
+      "id": "E3",
+      "kind": "scale",
+      "role": "ticket",
+      "ticket_no": "T-3003",
+      "vin": "VIN_F3",
+      "voyage_id": "F3",
+      "scale_id": "SCALE-1",
+      "calibration_id": "CAL-1-PREV",
+      "reading_kg": 900,
+      "weighed_at": "2026-05-15T09:00:00Z",
+      "revision": 1,
+      "void": false,
+      "ocr": {
+        "page": 2,
+        "box": [12, 34, 120, 18]
+      },
+      "version": 1
+    }
+  ]
+}
