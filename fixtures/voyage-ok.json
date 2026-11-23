@@ -38,6 +38,10 @@
     },
     "version": 1,
     "stability_min_cm": -30,
-    "stability_max_cm": 30
+    "stability_max_cm": 30,
+    "hull": {
+      "light_draft_cm": 124.545,
+      "cm_per_kg": 0.018182
+    }
   }
 ]

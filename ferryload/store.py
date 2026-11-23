@@ -12,36 +12,41 @@ CREATE TABLE IF NOT EXISTS decisions (name TEXT PRIMARY KEY, result TEXT NOT NUL
 CREATE TABLE IF NOT EXISTS entity_state (subsystem TEXT NOT NULL, entity_id TEXT NOT NULL, state TEXT NOT NULL, version INTEGER NOT NULL, PRIMARY KEY(subsystem,entity_id));
 CREATE TABLE IF NOT EXISTS decision_history (revision INTEGER NOT NULL, name TEXT NOT NULL, result TEXT NOT NULL, reason TEXT NOT NULL, PRIMARY KEY(revision,name));
 CREATE TABLE IF NOT EXISTS business_record (subsystem TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL, source_event TEXT NOT NULL, version INTEGER NOT NULL, body TEXT NOT NULL, PRIMARY KEY(subsystem,entity_type,entity_id,version));
+CREATE TABLE IF NOT EXISTS channel_safety (voyage_id TEXT PRIMARY KEY, verdict TEXT NOT NULL, draft_cm REAL NOT NULL, required_level_cm REAL NOT NULL, most_dangerous_at TEXT, min_feasible_cm REAL, max_feasible_cm REAL, assessment TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS departure_certificate (revision INTEGER NOT NULL, voyage_id TEXT NOT NULL, load_version INTEGER NOT NULL, ruling TEXT NOT NULL, input_fingerprint TEXT NOT NULL, body TEXT NOT NULL, PRIMARY KEY(revision,voyage_id,load_version,input_fingerprint));
 """
 
+
 def connect(path):
-    db=sqlite3.connect(path)
-    db.row_factory=sqlite3.Row
+    db = sqlite3.connect(path)
+    db.row_factory = sqlite3.Row
     db.executescript(SCHEMA)
     return db
 
+
 def import_file(db, kind, file):
-    raw=Path(file).read_bytes()
-    sha=hashlib.sha256(raw).hexdigest()
-    payload=json.loads(raw)
-    if not isinstance(payload,list) or not payload:
+    raw = Path(file).read_bytes()
+    sha = hashlib.sha256(raw).hexdigest()
+    payload = json.loads(raw)
+    if not isinstance(payload, list) or not payload:
         raise ValueError('source must contain a nonempty event list')
-    if db.execute('SELECT 1 FROM source_files WHERE sha=?',(sha,)).fetchone():
-        return {'sha':sha,'inserted':0,'idempotent':True}
+    if db.execute('SELECT 1 FROM source_files WHERE sha=?', (sha,)).fetchone():
+        return {'sha': sha, 'inserted': 0, 'idempotent': True}
     db.execute('SAVEPOINT ingest')
     try:
-        seq=db.execute('SELECT COALESCE(MAX(seq),0) FROM events').fetchone()[0]
+        seq = db.execute('SELECT COALESCE(MAX(seq),0) FROM events').fetchone()[0]
         for event in payload:
-            if event.get('kind')!=kind or not event.get('id'):
+            if event.get('kind') != kind or not event.get('id'):
                 raise ValueError('event kind/id mismatch')
-            body=json.dumps(event,ensure_ascii=False,sort_keys=True,separators=(',',':'))
-            old=db.execute('SELECT body FROM events WHERE event_id=?',(event['id'],)).fetchone()
+            body = json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+            old = db.execute('SELECT body FROM events WHERE event_id=?', (event['id'],)).fetchone()
             if old:
-                if old[0]!=body: raise ValueError('same event id with different content')
+                if old[0] != body:
+                    raise ValueError('same event id with different content')
                 continue
-            seq+=1
-            db.execute('INSERT INTO events VALUES (?,?,?,?,?)',(event['id'],kind,body,sha,seq))
-        db.execute('INSERT INTO source_files(sha,kind,raw) VALUES (?,?,?)',(sha,kind,raw))
+            seq += 1
+            db.execute('INSERT INTO events VALUES (?,?,?,?,?)', (event['id'], kind, body, sha, seq))
+        db.execute('INSERT INTO source_files(sha,kind,raw) VALUES (?,?,?)', (sha, kind, raw))
         rebuild(db)
         db.execute('RELEASE SAVEPOINT ingest')
         db.commit()
@@ -50,39 +55,65 @@ def import_file(db, kind, file):
         db.execute('RELEASE SAVEPOINT ingest')
         db.rollback()
         raise
-    return {'sha':sha,'inserted':len(payload),'idempotent':False}
+    return {'sha': sha, 'inserted': len(payload), 'idempotent': False}
+
 
 def rebuild(db):
-    events=[json.loads(row[0]) for row in db.execute('SELECT body FROM events ORDER BY seq')]
-    decisions,states=rules.calculate(events)
-    revision=db.execute('SELECT COUNT(*) FROM source_files').fetchone()[0]+1
+    events = [json.loads(row[0]) for row in db.execute('SELECT body FROM events ORDER BY seq')]
+    decisions, states, certificates = rules.calculate(events)
+    revision = db.execute('SELECT COUNT(*) FROM source_files').fetchone()[0] + 1
     db.execute('DELETE FROM decisions')
     db.execute('DELETE FROM entity_state')
     db.execute('DELETE FROM business_record')
-    for name,item in sorted(decisions.items()):
-        db.execute('INSERT INTO decisions VALUES (?,?,?,?)',(name,item['result'],item['reason'],json.dumps(item['evidence'],ensure_ascii=False,sort_keys=True)))
-        db.execute('INSERT OR REPLACE INTO decision_history VALUES (?,?,?,?)',(revision,name,item['result'],item['reason']))
-    for subsystem,entity,state,version in states:
-        db.execute('INSERT INTO entity_state VALUES (?,?,?,?)',(subsystem,entity,state,version))
+    db.execute('DELETE FROM channel_safety')
+    for name, item in sorted(decisions.items()):
+        db.execute('INSERT INTO decisions VALUES (?,?,?,?)', (name, item['result'], item['reason'], json.dumps(item['evidence'], ensure_ascii=False, sort_keys=True)))
+        db.execute('INSERT OR REPLACE INTO decision_history VALUES (?,?,?,?)', (revision, name, item['result'], item['reason']))
+    for subsystem, entity, state, version in states:
+        db.execute('INSERT INTO entity_state VALUES (?,?,?,?)', (subsystem, entity, state, version))
     for event in events:
-        for subsystem,entity_type,entity_id,body in rules.business_records(event):
-            db.execute('INSERT OR REPLACE INTO business_record VALUES (?,?,?,?,?,?)',(subsystem,entity_type,entity_id,event['id'],event.get('version',1),json.dumps(body,ensure_ascii=False,sort_keys=True)))
+        for subsystem, entity_type, entity_id, body in rules.business_records(event):
+            db.execute('INSERT OR REPLACE INTO business_record VALUES (?,?,?,?,?,?)', (subsystem, entity_type, entity_id, event['id'], event.get('version', 1), json.dumps(body, ensure_ascii=False, sort_keys=True)))
+    # 通道安全为当前态，随重算刷新
+    for cert in certificates:
+        assessment = {k: v for k, v in cert.items() if k not in ('input_fingerprint',)}
+        db.execute('INSERT OR REPLACE INTO channel_safety VALUES (?,?,?,?,?,?,?,?)',
+                   (cert['voyage_id'], cert['verdict'], cert['draft_cm'], cert['required_level_cm'],
+                    cert['most_dangerous_at'], cert['min_feasible_cm'], cert['max_feasible_cm'],
+                    json.dumps(assessment, ensure_ascii=False, sort_keys=True)))
+        # 放行证书 append-only：历史指纹与裁定永不覆盖，晚到水尺只追加新修订
+        db.execute('INSERT OR IGNORE INTO departure_certificate VALUES (?,?,?,?,?,?)',
+                   (revision, cert['voyage_id'], cert['load_version'], cert['ruling'],
+                    cert['input_fingerprint'], json.dumps(cert, ensure_ascii=False, sort_keys=True)))
+
 
 def report(db):
-    return {'decisions':{r['name']:{'result':r['result'],'reason':r['reason'],'evidence':json.loads(r['evidence'])} for r in db.execute('SELECT * FROM decisions ORDER BY name')},
-            'entities':[dict(r) for r in db.execute('SELECT * FROM entity_state ORDER BY subsystem,entity_id')],
-            'business_records':[dict(r) for r in db.execute('SELECT * FROM business_record ORDER BY subsystem,entity_type,entity_id,version')],
-            'sources':[dict(r) for r in db.execute('SELECT sha,kind FROM source_files ORDER BY sha')]}
+    return {'decisions': {r['name']: {'result': r['result'], 'reason': r['reason'], 'evidence': json.loads(r['evidence'])} for r in db.execute('SELECT * FROM decisions ORDER BY name')},
+            'entities': [dict(r) for r in db.execute('SELECT * FROM entity_state ORDER BY subsystem,entity_id')],
+            'business_records': [dict(r) for r in db.execute('SELECT * FROM business_record ORDER BY subsystem,entity_type,entity_id,version')],
+            'channel_safety': [dict(r) for r in db.execute('SELECT voyage_id,verdict,draft_cm,required_level_cm,most_dangerous_at,min_feasible_cm,max_feasible_cm FROM channel_safety ORDER BY voyage_id')],
+            'certificates': [dict(r) for r in db.execute('SELECT revision,voyage_id,load_version,ruling,input_fingerprint FROM departure_certificate ORDER BY revision,voyage_id,load_version')],
+            'sources': [dict(r) for r in db.execute('SELECT sha,kind FROM source_files ORDER BY sha')]}
+
+
+def certificate_history(db, voyage_id):
+    """返回某航次全部历史放行证书（含曲线见证与输入指纹），供审计回放。"""
+    rows = db.execute('SELECT body FROM departure_certificate WHERE voyage_id=? ORDER BY revision,load_version', (voyage_id,)).fetchall()
+    return [json.loads(r['body']) for r in rows]
+
 
 def audit(db):
-    before=report(db)
-    source_rows=list(db.execute('SELECT kind,raw FROM source_files ORDER BY rowid'))
-    memory=connect(':memory:')
-    for kind,raw in source_rows:
+    before = report(db)
+    source_rows = list(db.execute('SELECT kind,raw FROM source_files ORDER BY rowid'))
+    memory = connect(':memory:')
+    for kind, raw in source_rows:
         import tempfile
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
-            tmp.write(raw); path=tmp.name
-        try: import_file(memory,kind,path)
-        finally: Path(path).unlink()
-    after=report(memory)
-    return {'ok':before==after,'source_count':len(source_rows),'decision_count':len(before['decisions'])}
+            tmp.write(raw)
+            path = tmp.name
+        try:
+            import_file(memory, kind, path)
+        finally:
+            Path(path).unlink()
+    after = report(memory)
+    return {'ok': before == after, 'source_count': len(source_rows), 'decision_count': len(before['decisions'])}

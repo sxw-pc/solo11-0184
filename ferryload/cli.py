@@ -3,7 +3,9 @@ import json
 from pathlib import Path
 from .store import connect,import_file,report,audit
 
-IMPORTS={'voyage-import': 'voyage', 'vehicle-import': 'vehicle', 'stow-import': 'stow'}
+IMPORTS = {'voyage-import': 'voyage', 'vehicle-import': 'vehicle', 'stow-import': 'stow',
+           'gauge-import': 'gauge', 'channel-import': 'channel', 'restow-import': 'restow',
+           'sign-import': 'captain_sign'}
 def main(argv=None):
     parser=argparse.ArgumentParser(prog='ferryload')
     parser.add_argument('command',choices=list(IMPORTS)+['demo','report','audit'])

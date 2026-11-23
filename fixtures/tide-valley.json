@@ -1,0 +1,135 @@
+[
+  {
+    "id": "CH1",
+    "kind": "channel",
+    "voyage_id": "F1",
+    "distance_nm": 10.0,
+    "speed_kn": [10.0, 12.0],
+    "net_clearance_cm": 20,
+    "envelope": {
+      "rate_limit_cm_per_hour": 100.0,
+      "knots": [
+        {"at": "2026-06-01T10:00:00Z", "min_cm": 170, "max_cm": 220},
+        {"at": "2026-06-01T10:30:00Z", "min_cm": 170, "max_cm": 220},
+        {"at": "2026-06-01T11:00:00Z", "min_cm": 170, "max_cm": 220},
+        {"at": "2026-06-01T11:30:00Z", "min_cm": 170, "max_cm": 220},
+        {"at": "2026-06-01T12:00:00Z", "min_cm": 170, "max_cm": 220}
+      ]
+    },
+    "version": 1
+  },
+  {
+    "id": "G1",
+    "kind": "gauge",
+    "gauge_id": "GAUGE-1000",
+    "voyage_id": "F1",
+    "observed_at": "2026-06-01T10:00:00Z",
+    "level_cm": 220,
+    "calibrated": true,
+    "calibration_start": "2026-05-01T00:00:00Z",
+    "calibration_end": "2026-07-01T00:00:00Z",
+    "load_version": 1,
+    "version": 1
+  },
+  {
+    "id": "G2",
+    "kind": "gauge",
+    "gauge_id": "GAUGE-1200",
+    "voyage_id": "F1",
+    "observed_at": "2026-06-01T12:00:00Z",
+    "level_cm": 220,
+    "calibrated": true,
+    "calibration_start": "2026-05-01T00:00:00Z",
+    "calibration_end": "2026-07-01T00:00:00Z",
+    "load_version": 1,
+    "version": 1
+  },
+  {
+    "id": "G3",
+    "kind": "gauge",
+    "gauge_id": "GAUGE-1030",
+    "voyage_id": "F1",
+    "observed_at": "2026-06-01T10:30:00Z",
+    "level_cm": 220,
+    "calibrated": true,
+    "calibration_start": "2026-05-01T00:00:00Z",
+    "calibration_end": "2026-07-01T00:00:00Z",
+    "load_version": 1,
+    "version": 1
+  },
+  {
+    "id": "G4",
+    "kind": "gauge",
+    "gauge_id": "GAUGE-1100",
+    "voyage_id": "F1",
+    "observed_at": "2026-06-01T11:00:00Z",
+    "level_cm": 220,
+    "calibrated": true,
+    "calibration_start": "2026-05-01T00:00:00Z",
+    "calibration_end": "2026-07-01T00:00:00Z",
+    "load_version": 1,
+    "version": 1
+  },
+  {
+    "id": "G5",
+    "kind": "gauge",
+    "gauge_id": "GAUGE-1130",
+    "voyage_id": "F1",
+    "observed_at": "2026-06-01T11:30:00Z",
+    "level_cm": 220,
+    "calibrated": true,
+    "calibration_start": "2026-05-01T00:00:00Z",
+    "calibration_end": "2026-07-01T00:00:00Z",
+    "load_version": 1,
+    "version": 1
+  },
+  {
+    "id": "R1",
+    "kind": "restow",
+    "voyage_id": "F1",
+    "vin": "VIN1",
+    "action": "unload",
+    "lane": null,
+    "load_version": 2,
+    "seq": 10,
+    "next_voyage_id": "F2",
+    "new_lanes": {
+      "L3": {
+        "weight_kg": 1200,
+        "length_cm": 600,
+        "height_cm": 300,
+        "lever_arm_cm": 0
+      }
+    },
+    "version": 2
+  },
+  {
+    "id": "R2",
+    "kind": "restow",
+    "voyage_id": "F1",
+    "vin": "VIN2",
+    "action": "restow",
+    "lane": "L3",
+    "load_version": 2,
+    "seq": 11,
+    "version": 2
+  },
+  {
+    "id": "K1",
+    "kind": "captain_sign",
+    "voyage_id": "F1",
+    "load_version": 1,
+    "signed": true,
+    "signed_at": "2026-06-01T09:40:00Z",
+    "version": 1
+  },
+  {
+    "id": "K2",
+    "kind": "captain_sign",
+    "voyage_id": "F1",
+    "load_version": 2,
+    "signed": true,
+    "signed_at": "2026-06-01T09:55:00Z",
+    "version": 2
+  }
+]
