@@ -1,0 +1,48 @@
+{
+  "scenario": "seal-transfer",
+  "description": "C1 在 B 港经查验单 I7 合法换封 S1→S2（发行流水 N9，带现场照片）；C2 的模糊登记把同一 N9/S2 也录到自己名下，且两张登记的上传顺序与发生顺序相反",
+  "records": [
+    {
+      "record_id": "R1", "kind": "departure", "cargo_id": "C1", "vin": "VIN-C1",
+      "port": "A", "event": "DEP-C1", "old_seal": null, "reason": null,
+      "issuance": null, "new_seal": "S1",
+      "occurred_at": "2026-11-20T08:00:00Z", "recorded_at": "2026-11-20T08:05:00Z",
+      "page": 12, "source": "registry", "revokes": null
+    },
+    {
+      "record_id": "R2", "kind": "unseal", "cargo_id": "C1", "vin": "VIN-C1",
+      "port": "B", "event": "I7", "old_seal": "S1", "reason": "海关查验",
+      "issuance": null, "new_seal": null,
+      "occurred_at": "2026-11-20T10:00:00Z", "recorded_at": "2026-11-20T10:02:00Z",
+      "page": 13, "source": "registry", "revokes": null
+    },
+    {
+      "record_id": "R3", "kind": "reseal", "cargo_id": "C1", "vin": "VIN-C1",
+      "port": "B", "event": "I7", "old_seal": null, "reason": null,
+      "issuance": "N9", "new_seal": "S2",
+      "occurred_at": "2026-11-20T10:05:00Z", "recorded_at": "2026-11-20T10:40:00Z",
+      "page": null, "source": "photo", "revokes": null
+    },
+    {
+      "record_id": "R4", "kind": "arrival", "cargo_id": "C1", "vin": "VIN-C1",
+      "port": "C", "event": "ARR-C1", "old_seal": "S2", "reason": null,
+      "issuance": null, "new_seal": null,
+      "occurred_at": "2026-11-20T11:00:00Z", "recorded_at": "2026-11-20T11:01:00Z",
+      "page": null, "source": "photo", "revokes": null
+    },
+    {
+      "record_id": "R5", "kind": "departure", "cargo_id": "C2", "vin": "VIN-C2",
+      "port": "A", "event": "DEP-C2", "old_seal": null, "reason": null,
+      "issuance": null, "new_seal": "S3",
+      "occurred_at": "2026-11-20T08:10:00Z", "recorded_at": "2026-11-20T08:12:00Z",
+      "page": 14, "source": "registry", "revokes": null
+    },
+    {
+      "record_id": "R6", "kind": "reseal", "cargo_id": "C2", "vin": "VIN-C2",
+      "port": "B", "event": "I9", "old_seal": null, "reason": null,
+      "issuance": "N9", "new_seal": "S2",
+      "occurred_at": "2026-11-20T10:06:00Z", "recorded_at": "2026-11-20T10:20:00Z",
+      "page": 15, "source": "registry", "quality": "模糊", "revokes": null
+    }
+  ]
+}
